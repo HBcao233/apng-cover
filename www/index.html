@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>APNG 封面生成器 (WASM)</title>
+        <style>
+            :root {
+                color-scheme: light dark;
+            }
+            body {
+                font-family:
+                    system-ui,
+                    -apple-system,
+                    "Segoe UI",
+                    "Noto Sans SC",
+                    sans-serif;
+                max-width: 720px;
+                margin: 0 auto;
+                padding: 24px;
+                line-height: 1.6;
+            }
+            h1 {
+                font-size: 1.4rem;
+                margin-bottom: 0.2em;
+            }
+            .hint {
+                font-size: 0.85rem;
+                color: #888;
+                margin-top: 0;
+            }
+            .row {
+                display: flex;
+                gap: 12px;
+                align-items: center;
+                flex-wrap: wrap;
+                margin: 16px 0;
+            }
+            button {
+                padding: 5px 20px;
+                border-radius: 8px;
+                border: none;
+                background: #2b6cb0;
+                color: #fff;
+                cursor: pointer;
+                font-size: 1rem;
+                line-height: 1.6;
+            }
+            button:hover:not(:disabled) {
+                background: #2c5282;
+            }
+            button:disabled {
+                opacity: 0.45;
+                cursor: not-allowed;
+            }
+            a.dl {
+                display: inline-block;
+                padding: 5px 20px;
+                border-radius: 8px;
+                background: #276749;
+                color: #fff;
+                text-decoration: none;
+                font-size: 1rem;
+            }
+            #status {
+                font-size: 0.92rem;
+                color: #666;
+                min-height: 1.4em;
+            }
+            #preview {
+                max-width: 100%;
+                border: 1px solid #ccc;
+                border-radius: 8px;
+                margin-top: 16px;
+                background: #f1f1f2;
+            }
+            #previewWrap {
+                display: none;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>APNG 封面生成器</h1>
+        <p class="hint">
+            选择一张 PNG（静态或 APNG）。程序会用它自身的尺寸建画布，
+            把内置封面图缩放居中铺在画布上作为默认图，再原样保留动画帧。
+            <br />
+            建议不要使用太大分辨率的图片，可能会需要较长时间。
+        </p>
+
+        <div class="row">
+            <input type="file" id="file" accept="image/png,.png" />
+            <button id="run" disabled>生成</button>
+            <a id="dl" class="dl" style="display: none">下载结果</a>
+        </div>
+
+        <div id="status">正在加载 WASM…</div>
+        <div id="previewWrap"><img id="preview" alt="预览" /></div>
+
+        <script type="module">
+            import init, { generate_cover } from "./pkg/apng.js";
+
+            const fileEl = document.getElementById("file");
+            const runEl = document.getElementById("run");
+            const dlEl = document.getElementById("dl");
+            const statusEl = document.getElementById("status");
+            const prevEl = document.getElementById("preview");
+            const wrapEl = document.getElementById("previewWrap");
+
+            let inputBytes = null;
+            let inputName = "";
+            let lastUrl = null;
+
+            // ---- 初始化 WASM ----
+            try {
+                await init();
+                statusEl.textContent = "WASM 已就绪，请选择 PNG 文件。";
+            } catch (e) {
+                statusEl.textContent = "WASM 加载失败：" + e;
+                console.error(e);
+                throw e;
+            }
+
+            // ---- 选择文件 ----
+            fileEl.addEventListener("change", async () => {
+                const f = fileEl.files?.[0];
+                if (!f) return;
+
+                inputName = f.name;
+                inputBytes = new Uint8Array(await f.arrayBuffer());
+
+                statusEl.textContent = `已选择 ${f.name}（${inputBytes.length.toLocaleString()} 字节）`;
+                runEl.disabled = false;
+                dlEl.style.display = "none";
+                wrapEl.style.display = "none";
+            });
+
+            // ---- 生成 ----
+            runEl.addEventListener("click", () => {
+                if (!inputBytes) return;
+
+                runEl.disabled = true;
+                statusEl.textContent = "处理中…";
+
+                // setTimeout 让浏览器先绘制“处理中…”再进入同步的 WASM 计算
+                setTimeout(() => {
+                    try {
+                        const t0 = performance.now();
+                        const out = generate_cover(inputBytes); // Uint8Array
+                        const ms = (performance.now() - t0).toFixed(1);
+
+                        const blob = new Blob([out], { type: "image/png" });
+                        if (lastUrl) URL.revokeObjectURL(lastUrl);
+                        lastUrl = URL.createObjectURL(blob);
+
+                        const base =
+                            inputName.replace(/\.png$/i, "") || "output";
+                        dlEl.href = lastUrl;
+                        dlEl.download = `${base}-cover.png`;
+                        dlEl.style.display = "inline-block";
+
+                        prevEl.src = lastUrl;
+                        wrapEl.style.display = "block";
+
+                        statusEl.textContent = `完成：输出 ${out.length.toLocaleString()} 字节，耗时 ${ms} ms`;
+                    } catch (err) {
+                        statusEl.textContent = "失败：" + err;
+                        console.error(err);
+                    } finally {
+                        runEl.disabled = false;
+                    }
+                }, 0);
+            });
+        </script>
+    </body>
+</html>
