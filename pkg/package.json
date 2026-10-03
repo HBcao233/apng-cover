@@ -3,8 +3,8 @@
   "type": "module",
   "version": "0.1.0",
   "files": [
-    "apng_bg.wasm",
-    "apng.js",
+    "apng_bg.4d38e1ad.wasm",
+    "apng.0b585fe6.js",
     "apng.d.ts"
   ],
   "main": "apng.js",

@@ -1,17 +1,13 @@
 /* tslint:disable */
 /* eslint-disable */
 
-/**
- * 输入 PNG 字节，返回重新生成的 APNG 字节。
- * 出错时抛出 JS 异常。
- */
-export function generate_cover(input: Uint8Array): Uint8Array;
+export function add_cover(input: Uint8Array): Uint8Array;
 
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
 
 export interface InitOutput {
     readonly memory: WebAssembly.Memory;
-    readonly generate_cover: (a: number, b: number) => [number, number, number, number];
+    readonly add_cover: (a: number, b: number) => [number, number, number, number];
     readonly __wbindgen_externrefs: WebAssembly.Table;
     readonly __wbindgen_malloc: (a: number, b: number) => number;
     readonly __externref_table_dealloc: (a: number) => void;

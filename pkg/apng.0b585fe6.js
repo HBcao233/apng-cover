@@ -1,15 +1,13 @@
 /* @ts-self-types="./apng.d.ts" */
 
 /**
- * 输入 PNG 字节，返回重新生成的 APNG 字节。
- * 出错时抛出 JS 异常。
  * @param {Uint8Array} input
  * @returns {Uint8Array}
  */
-export function generate_cover(input) {
+export function add_cover(input) {
     const ptr0 = passArray8ToWasm0(input, wasm.__wbindgen_malloc);
     const len0 = WASM_VECTOR_LEN;
-    const ret = wasm.generate_cover(ptr0, len0);
+    const ret = wasm.add_cover(ptr0, len0);
     if (ret[3]) {
         throw takeFromExternrefTable0(ret[2]);
     }
@@ -179,7 +177,7 @@ async function __wbg_init(module_or_path) {
     }
 
     if (module_or_path === undefined) {
-        module_or_path = new URL('apng_bg.wasm', import.meta.url);
+        module_or_path = new URL('apng_bg.4d38e1ad.wasm', import.meta.url);
     }
     const imports = __wbg_get_imports();
 
