@@ -1,0 +1,15 @@
+{
+  "name": "apng",
+  "type": "module",
+  "version": "0.1.0",
+  "files": [
+    "apng_bg.wasm",
+    "apng.js",
+    "apng.d.ts"
+  ],
+  "main": "apng.js",
+  "types": "apng.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}
